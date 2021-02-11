@@ -1,0 +1,199 @@
+---
+title: "Honkai Impact 3 Abyss"
+author: "Guan Heng Ting"
+date: "2/11/2021"
+output: html_document
+---
+
+## Introduction
+Honkai Impact 3 is an anime action game available on mobile and PC. There is a game mode that require players to complete a stage. Score given is based on how fast one can clear said stage. Using data collected myself over 9months, I analyzed and evaluate my account performance and inferred Mihoyo's business model in relation to this game.
+
+## About the Abyss
+The Abyss is a game mode in Honkai Impact 3 that require players to defeat monsters to clear a stage in the shortest time possible. Score is calculated based on how fast the stage is cleared. Scores are compared to other players' twice a week and top scorers get to move on to harder bracket, where they will compete with other players within the same bracket as well. The same applies to bottom scorers.
+
+There are two brackets in the dataset:
+
+- Agony (AG)
+- Red Lotus (RL)
+
+Red Lotus brackets are generally harder than Agony brackets.
+
+## About Battlesuits
+To put it simply, battlesuits are characters controlled by the player who will be clearing the stage. There are different attack types and different character types. They can be in any combination (e.g. Physical - Psychic, Fire - Biological)
+
+Attack Types | Character types
+------------- | -------------
+Physical | Biological
+Fire | Psychic
+Ice | Mecha
+Thunder | Quantum
+
+## Analysis
+### Outcomes based on weekdays/weekends
+As scores are finalised on a Wednesday and Sunday (based on GMT +8). I suspect that weekdays might be easier to achieve good outcomes since players are working on the weekdays and may not have time to play.
+
+Outcomes are based on the following:
+
+Bracket | Status | Outcome
+------------- | ------------- | -----------
+Agony | Promote | Good
+Agony | Retain | Bad
+Red Lotus | Retain | Good
+Red Lotus | Relegate | Bad
+
+```{r include = FALSE, echo = TRUE}
+library(tidyverse)
+library(readxl)
+library(ggplot2)
+library(plotly)
+library(lubridate)
+
+options(scipen = 99)
+```
+```{r  echo = TRUE}
+df1<- read_xlsx("Abyss data.xlsx")
+df2<- df1 %>% filter(!is.na(Disturbance))
+df2$Weather<- as.factor(df2$Weather)
+df2$Date<- as.Date(df2$Date)
+
+df2_day<- df2 %>%
+  mutate(day = weekdays(as.Date(df2$Date)),
+         Outcome = case_when(Rank == "AG" & Status == "Promote" ~ "Good",
+                             Rank == "RL" & Status == "Retain" ~ "Good",
+                             Rank == "AG" & Status == "Retain" ~ "Bad",
+                             Rank == "RL" & Status == "Relegate" ~ "Bad")) %>%
+  rename(Main_DPS = `Main DPS`) %>%
+  filter(day != "Tuesday" & day != "Saturday")
+
+day_lm<- glm(as.factor(Outcome) ~ Disturbance + as.factor(day),
+             data = df2_day,
+             family = binomial)
+
+summary(day_lm)
+```
+Observation:  
+Day of the week preliminarily does not seem to impact Status.
+```{r eval = TRUE}
+ggplotly(ggplot(df2_day, aes(x= day, fill = Outcome))+
+           geom_bar(position = "fill")+
+           facet_wrap(~Rank))
+```
+Agony: Might be more successful in the weekdays  
+Red Lotus: Might be more successful in the weekends
+
+### Outcome over time
+I attempt to evaluate my performance over time in a monthly basis.
+
+```{r}
+df2_outcome<- df2_day %>%
+  mutate(month = month(Date)) %>%
+  group_by(month, Rank, Outcome) %>%
+  mutate(count = n()) %>%
+  filter(month != 12) %>%
+  ungroup()
+
+ggplotly(ggplot(df2_outcome, aes(x= month, y= count, fill = Outcome))+
+  geom_col(position = "fill")+
+  facet_wrap(~Rank))
+```
+Observation:  
+Agony: Good outcome most of the time with some outliers  
+Red Lotus: Increasing number of good outcome over the months  
+
+Conclusion:  
+There is some improvement in performance over the months.
+
+### Disturbance level over time
+Disturbance is a parameter that changes the difficulty of the stage within a bracket. The higher the disturbance level, the more difficult it becomes. Red Lotus bracket generally have higher disturbance level than Agony bracket.
+```{r}
+df2_dist<- df2 %>%
+  mutate(Month = month(Date)) %>%
+  group_by(Rank, Month) %>%
+  mutate(Mean = round(mean(Disturbance),0)) %>%
+  ungroup()
+
+ggplot(df2_dist, aes(x= Date, y= Disturbance))+
+  geom_point()+
+  geom_smooth(method = "lm")+
+  facet_wrap(~Rank)
+```
+Observation:   
+Disturbance levels of both Agony and Red lotus abyss has been increasing over the months. However, Red lotus disturbance increases far faster than Agony.  
+Worryingly, current disturbance in Agony is closing in to Red lotus disturbance 9 months back.
+
+### Comparing versions with weather
+To make the game more dynamic, weather effects are parameters that changes the monsters in the stage, making certain battlesuits (characters) stronger or weaker against those enemies. They are not visual effects i.e. rain.
+```{r}
+versioncomm<- df2 %>%
+  select(2,7) %>%
+  mutate(Weathergrp = case_when(Weather == 1|Weather == 9 ~ "cold",
+                             Weather == 3|Weather == 10 ~ "Lightning",
+                             Weather == 2 ~ "MechBio",
+                             Weather == 4|Weather == 11 ~ "Fire",
+                             Weather == 5|Weather == 7 ~ "Physical",
+                             Weather == 6 ~ "None",
+                             Weather == 8|Weather == 13 ~ "Quantum",
+                             Weather == 12 ~ "Mechpsy",
+                             Weather == 14 ~ "Allele")) %>%
+  group_by(Version, Weathergrp) %>%
+  mutate(count = n()) %>%
+  ungroup() %>%
+  group_by(Version) %>%
+  mutate(percent = (round(count/n(),2))*100) %>%
+  distinct() %>%  
+  filter(percent == max(percent)) %>%
+  ungroup()
+```  
+
+Observation:  
+Most common weather by Version:  
+```{r}
+verdata<- c('v3.6','v3.7','v3.8','v3.9','v4.0','v4.1')
+weadata<- c('Lightning','Physical','Quantum & Lightning','Physical','Fire','Lightning')
+batdata<- c('Lightning','Fire','Quantum','Physical','Physical','Lightning')
+condata<- c('Consistent','Not Consistent','Consistent','Not Consistent','Consistent','Consistent')
+weasum<- data.frame(verdata,weadata,batdata,condata)
+colnames(weasum)<- c('Version', 'Most frequent weather', 'Battlesuit release type', 'Consistent?')
+knitr::kable(weasum)
+```
+
+Conclusion:  
+Mihoyo tend to add weather that benefits the newest battlesuit released.
+Most likely to give players a reason to gacha for them to increase revenue.  
+
+### Most common boss by version patch
+Every stage contains a boss. Each boss has their own unique features. Scores are typically the last monster encountered in a stage, so time taken to kill boss determines score achieved. Different battlesuits(characters) also have different effectivenss against bosses. Hence, we check for most frequently appearing boss every patch.
+
+```{r}
+df2_versionboss<- df2 %>%
+  group_by(Version, Boss) %>%
+  mutate(bosscount = n()) %>%
+  select(2,5,11) %>%
+  arrange(Version,desc(bosscount)) %>%
+  distinct() %>%
+  ungroup() %>%
+  group_by(Version)  %>%  
+  filter(bosscount == max(bosscount)) %>%
+  ungroup()
+```
+
+Observation:  
+Most common boss:  
+
+Version | Boss | Newest battlesuit effectiveness
+------------- | ------------- | -----------
+v3.6 | Benares | Effective
+v3.7 | Jizo Mitama, Aesir Heimdall, Parvati | Effective
+v3.8 | Tontaniuh, Argent Knight | Effective
+v3.9 | Argent Knight, Jizo Mitama, Deathweb + Gigant | Effective
+v4.0 | Argent Knight | Not Effective
+v4.1 | Hepaestus | Effective
+
+Conclusion:  
+Bosses are generally weak to newly released battlesuits, this gives players a reason to gacha for new battlesuits every patch to stay ahead of other players.
+
+## Business model:  
+Mihoyo seems to release new battlesuits every patch that are significantly stronger than other existing battlesuits. This resulted in faster clearing time in general and disturbance levels have to be made higher in order to compensate for this. 
+
+### Implications
+Mihoyo's business model creates pressure on players to stay ahead of rankings by continuously spend money to obtain new battlesuits every 6 weeks, which is about the duration of a patch in general.
