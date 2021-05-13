@@ -1,0 +1,72 @@
+Description of variables
+
+Date - Date when abyss round ends
+
+Version - Version of the game 
+Battlesuit released and major upgrades (Affects game balance)
+v3.6 - Darkbolt Jonin + Nuada's revenge
+v3.7 - Azure Empyrea + Tranquil Rhapsody
+v3.8 - Valkyrie Gloria + Skadi of Thrymeheim
+v3.9 - Bright knight:Excelsis + Briaereus EX
+v4.0 - Starlit Astrologos + Domain of the Void
+v4.1 - Herrscher of Thunder 
+
+Type:
+QS - Q-Singularis
+QG - Q-Gateway
+DS - Dirac Sea
+
+Disturbance - Disturbance level in abyss
+
+Boss - Final Boss of Abyss
+
+ArK - Argent Knight: Artemis
+HOV - Herscherr of the Void
+DXY - Dark Jixuanyuan
+Gane/Wen - Ganesha + Wendy
+ArcDef - Arc DEF: Riot
+QL - Quantum Legion (Void Erinyes + Taurus)
+F/FEmperor - Flame/ Frost Emperor
+Death/Gig - Deathweb + Gigant
+Rime/Hiero - Rime Titan + Hierophant
+Wendy - x2 Wendies
+
+Rank - Difficulty of Abyss:
+AG - Agony
+RL - Red Lotus
+MAY - Mayriad
+
+Weather (Buffs and debuffs for the boss in this round):
+1 - Cold Threshold (Ice damage buff)
+2 - Saturnine (Type counter gain 20% buff, Bio/Psy types only)
+3 - Humid (30% phy reist, take 50% more lightning dmg, Mech types)
+4 - Flash Explosion (Fire damage buff)
+5 - Storms (50% lightning resistance, take 30% more physical dmg, lightning type)
+6 - Normal (No effect)
+7 - Spatial Fracture (Physical damage buff)
+8 - Quantum Collapse (Remove quantum shield, take 40% more total dmg)
+9 - Dry (50% fire resistance, take 50% more ice damage, fire type)
+10 - Hyper EM (Lightning damage buff + paralysis)
+11 - Cold (50% Ice resistance, 50% more fire damage, Ice type)
+12 - Endless Night (Type-counter gain 20% buff, Bio/Mech only)
+13 - Dirac Quantum Collapse (Type counter gain 20% buff, Qua/Mech types only)
+14 - Elemental Storm (Elemental damage, elemental damage buff)
+
+Main DPS - Name of primary battlesuit used to do damage (Named based on shortforms)
+HOR - Herscherr of Reason
+FS - Flame Sakitama
+HOV - Herscherr of the Void
+BR - Blood Rose
+TP - Twilight Paladin
+NS - Night Squire
+DJ - Darkbolt Jonin
+HOTF - Hawk of the Fog
+SP - Swallowtail Phantasm
+HOT - Herscherr of Thunder
+
+Points - Points obtained
+
+Status - Whether promoted, retain or relegated
+Promoted - Move up to harder bracket
+Retain - Remain in current bracket
+Relegated - Move down to easier bracket
